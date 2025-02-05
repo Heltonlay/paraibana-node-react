@@ -10,7 +10,7 @@ app.use(funcionarios, produtos, categorias, vendas);
 
 app.listen(8080, (error) => {
     if (error)
-        console.log('houve algum erro')
+        console.log('Houve algum erro: ' + error)
     else
-        console.log('sistema inicializado com sucesso')
+        console.log('Sistema inicializado com sucesso.\nEscutando requisições HTTP nos métodos GET, POST, PUT e DELETE.')
 })

@@ -1,26 +1,33 @@
 const { Router } = require('express')
 const router = Router();
-const mariadb = require('mariadb');
-
-const pool = mariadb.createPool({
-    host: 'localhost',
-    database: 'paraibana',
-    user: 'root',
-    password: 'admin',
-    connectionLimit: 5
-});
+const pool = require('../pool');
 
 router.get('/produtos', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query(`SELECT * FROM produtos`);
+        let rows = await conn.query(`SELECT * FROM produtos`);
+        const relacaoCategoriasRows = await conn.query(`SELECT * FROM produtos_categorias`);
+        const categoriasRows = await conn.query(`SELECT * FROM categorias`);
         console.log(rows);
+
+        rows = rows.map(produto => {
+            const categorias = relacaoCategoriasRows
+                .filter(categoria => { return categoria["id_produto"] == produto["id"]; })
+                .map(categoria => { return categoriasRows.filter(obj => obj["id"] == categoria["id_categoria"])[0] });
+
+            return { ...produto, categorias: categorias };
+        });
+
         const jsonS = JSON.stringify(rows);
         res.writeHead(200, { 'Content-Type': 'text/json' })
         res.end(jsonS);
     }
-    catch (e) { }
+    catch (e) {
+        console.error(e.message);
+        res.writeHead(500, { 'Content-Type': 'text/plain' })
+        res.end(e.message);
+    }
 })
 
 router.post('/produtos', async (req, res) => {
@@ -31,16 +38,16 @@ router.post('/produtos', async (req, res) => {
         console.log(req.body)
 
         if (typeof req.body["nome"] !== 'string' || !req.body["nome"] instanceof String)
-            throw "O nome precisa ser especificado."
+            throw new Error("O nome precisa ser especificado.");
 
         if (isNaN(req.body["valor"]))
-            throw "O valor precisa ser especificado."
+            throw new Error("O valor precisa ser especificado.");
 
         if (isNaN(req.body["estoque"]))
-            throw "O estoque precisa ser especificado."
+            throw new Error("O estoque precisa ser especificado.");
 
         if (typeof req.body["id_categoria"] !== 'object' || !req.body["id_categoria"] instanceof Object)
-            throw "O nome precisa ser especificado."
+            throw new Error("O nome precisa ser especificado.");
 
         const rows = await conn.query(`INSERT INTO produtos VALUES(null,
             "${req.body["nome"]}", 
@@ -65,8 +72,9 @@ router.post('/produtos', async (req, res) => {
         res.end(id);
     }
     catch (e) {
+        console.error(e.message);
         res.writeHead(400, { 'Content-Type': 'text/plain' })
-        res.end(e);
+        res.end(e.message);
     }
 })
 
@@ -79,16 +87,16 @@ router.put('/produtos/*', async (req, res) => {
         const id = req.url.substring(10);
 
         if (isNaN(id))
-            throw "Id incorreto."
+            throw new Error("Id incorreto.");
 
         if (typeof req.body["nome"] !== 'string' || !req.body["nome"] instanceof String)
-            throw "O nome precisa ser especificado."
+            throw new Error("O nome precisa ser especificado.");
 
         if (isNaN(req.body["valor"]))
-            throw "O valor precisa ser especificado."
+            throw new Error("O valor precisa ser especificado.");
 
         if (isNaN(req.body["estoque"]))
-            throw "O estoque precisa ser especificado."
+            throw new Error("O estoque precisa ser especificado.");
 
         const rows = await conn.query(`UPDATE produtos SET 
             nome = "${req.body["nome"]}", 
@@ -100,15 +108,16 @@ router.put('/produtos/*', async (req, res) => {
 
         if (rows["affectedRows"] == 0) {
             errorCode = 404;
-            throw "Id não encontrado."
+            throw new Error("Id não encontrado.");
         }
 
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }
     catch (e) {
+        console.error(e.message);
         res.writeHead(errorCode, { 'Content-Type': 'text/plain' })
-        res.end(e);
+        res.end(e.message);
     }
 })
 
@@ -121,13 +130,13 @@ router.delete('/produtos/*', async (req, res) => {
         const id = req.url.substring(10);
 
         if (isNaN(id))
-            throw "Id incorreto."
+            throw new Error("Id incorreto.");
 
         const rows = await conn.query(`DELETE FROM produtos WHERE id = ${id}`);
 
         if (rows["affectedRows"] == 0) {
             errorCode = 404;
-            throw "Id não encontrado."
+            throw new Error("Id não encontrado.");
         }
 
         console.log(rows);
@@ -135,8 +144,9 @@ router.delete('/produtos/*', async (req, res) => {
         res.end();
     }
     catch (e) {
+        console.error(e.message);
         res.writeHead(errorCode, { 'Content-Type': 'text/plain' })
-        res.end(e);
+        res.end(e.message);
     }
 })
 

@@ -1,14 +1,6 @@
 const { Router } = require('express')
 const router = Router();
-const mariadb = require('mariadb');
-
-const pool = mariadb.createPool({
-    host: 'localhost',
-    database: 'paraibana',
-    user: 'root',
-    password: 'admin',
-    connectionLimit: 5
-});
+const pool = require('../pool');
 
 router.get('/categorias', async (req, res) => {
     let conn;
@@ -20,7 +12,11 @@ router.get('/categorias', async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'text/json' })
         res.end(jsonS);
     }
-    catch (e) { }
+    catch (e) {
+        console.error(e.message);
+        res.writeHead(500, { 'Content-Type': 'text/plain' })
+        res.end(e.message);
+    }
 })
 
 router.post('/categorias', async (req, res) => {
@@ -29,7 +25,7 @@ router.post('/categorias', async (req, res) => {
         conn = await pool.getConnection();
 
         if (typeof req.body["nome"] !== 'string' || !req.body["nome"] instanceof String)
-            throw "O nome precisa ser especificado."
+            throw new Error("O nome precisa ser especificado.");
 
         console.log(req.body)
 
@@ -40,8 +36,9 @@ router.post('/categorias', async (req, res) => {
         res.end(String(rows["insertId"]).replace('n', ''));
     }
     catch (e) {
+        console.error(e.message);
         res.writeHead(400, { 'Content-Type': 'text/plain' })
-        res.end(e);
+        res.end(e.message);
     }
 })
 
@@ -54,16 +51,16 @@ router.put('/categorias/*', async (req, res) => {
         const id = req.url.substring(12);
 
         if (isNaN(id))
-            throw "Id incorreto."
+            throw new Error("Id incorreto.");
 
         if (typeof req.body["nome"] !== 'string' || !req.body["nome"] instanceof String)
-            throw "O nome precisa ser especificado."
+            throw new Error("O nome precisa ser especificado.");
 
         const rows = await conn.query(`UPDATE categorias SET nome = "${req.body["nome"]}" WHERE id = ${id}`);
 
         if (rows["affectedRows"] == 0) {
             errorCode = 404;
-            throw "Id não encontrado."
+            throw new Error("Id não encontrado.");
         }
 
         console.log(rows);
@@ -71,8 +68,9 @@ router.put('/categorias/*', async (req, res) => {
         res.end();
     }
     catch (e) {
+        console.error(e.message);
         res.writeHead(400, { 'Content-Type': 'text/plain' })
-        res.end(e);
+        res.end(e.message);
     }
 })
 
@@ -85,13 +83,13 @@ router.delete('/categorias/*', async (req, res) => {
         const id = req.url.substring(12);
 
         if (isNaN(id))
-            throw "Id incorreto."
+            throw new Error("Id incorreto.");
 
         const rows = await conn.query(`DELETE FROM categorias WHERE id = ${id}`);
 
         if (rows["affectedRows"] == 0) {
             errorCode = 404;
-            throw "Id não encontrado."
+            throw new Error("Id não encontrado.");
         }
 
         console.log(rows);
@@ -99,8 +97,9 @@ router.delete('/categorias/*', async (req, res) => {
         res.end();
     }
     catch (e) {
+        console.error(e.message);
         res.writeHead(errorCode, { 'Content-Type': 'text/plain' })
-        res.end(e);
+        res.end(e.message);
     }
 })
 
