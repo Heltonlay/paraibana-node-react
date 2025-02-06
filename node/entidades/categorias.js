@@ -9,6 +9,7 @@ router.get('/categorias', async (req, res) => {
         const rows = await conn.query(`SELECT * FROM categorias`);
         console.log(rows);
         const jsonS = JSON.stringify(rows);
+        conn.end();
         res.writeHead(200, { 'Content-Type': 'text/json' })
         res.end(jsonS);
     }
@@ -32,6 +33,7 @@ router.post('/categorias', async (req, res) => {
         const rows = await conn.query(`INSERT INTO categorias VALUES(null, "${req.body["nome"]}")`);
 
         console.log(rows);
+        conn.end();
         res.writeHead(200, { 'Content-Type': 'text/plain' })
         res.end(String(rows["insertId"]).replace('n', ''));
     }
@@ -64,6 +66,7 @@ router.put('/categorias/*', async (req, res) => {
         }
 
         console.log(rows);
+        conn.end();
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }
@@ -93,6 +96,7 @@ router.delete('/categorias/*', async (req, res) => {
         }
 
         console.log(rows);
+        conn.end();
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }

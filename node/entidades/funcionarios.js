@@ -9,6 +9,7 @@ router.get('/funcionarios', async (req, res) => {
         const rows = await conn.query(`SELECT * FROM funcionarios`);
         console.log(rows);
         const jsonS = JSON.stringify(rows);
+        conn.end();
         res.writeHead(200, { 'Content-Type': 'text/json' })
         res.end(jsonS);
     }
@@ -41,6 +42,7 @@ router.post('/funcionarios', async (req, res) => {
         const rows = await conn.query(comando);
 
         console.log(rows);
+        conn.end();
         res.writeHead(200, { 'Content-Type': 'text/plain' })
         res.end(String(rows["insertId"]).replace('n', ''));
     }
@@ -81,6 +83,7 @@ router.put('/funcionarios/*', async (req, res) => {
         }
 
         console.log(rows);
+        conn.end();
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }
@@ -110,6 +113,7 @@ router.delete('/funcionarios/*', async (req, res) => {
         }
 
         console.log(rows);
+        conn.end();
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }

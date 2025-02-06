@@ -20,6 +20,7 @@ router.get('/produtos', async (req, res) => {
         });
 
         const jsonS = JSON.stringify(rows);
+        conn.end();
         res.writeHead(200, { 'Content-Type': 'text/json' })
         res.end(jsonS);
     }
@@ -47,7 +48,7 @@ router.post('/produtos', async (req, res) => {
             throw new Error("O estoque precisa ser especificado.");
 
         if (typeof req.body["id_categoria"] !== 'object' || !req.body["id_categoria"] instanceof Object)
-            throw new Error("O nome precisa ser especificado.");
+            throw new Error("Uma categoria precisa ser especificada.");
 
         const rows = await conn.query(`INSERT INTO produtos VALUES(null,
             "${req.body["nome"]}", 
@@ -68,6 +69,7 @@ router.post('/produtos', async (req, res) => {
 
         console.log(categoriasRows);
 
+        conn.end();
         res.writeHead(200, { 'Content-Type': 'text/plain' })
         res.end(id);
     }
@@ -111,6 +113,7 @@ router.put('/produtos/*', async (req, res) => {
             throw new Error("Id não encontrado.");
         }
 
+        conn.end();
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }
@@ -140,6 +143,7 @@ router.delete('/produtos/*', async (req, res) => {
         }
 
         console.log(rows);
+        conn.end();
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }

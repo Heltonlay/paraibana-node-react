@@ -20,6 +20,7 @@ router.get('/vendas', async (req, res) => {
         });
 
         const jsonS = JSON.stringify(rows);
+        conn.end();
         res.writeHead(200, { 'Content-Type': 'text/json' })
         res.end(jsonS);
     }
@@ -43,6 +44,9 @@ router.post('/vendas', async (req, res) => {
         if (typeof req.body["nome_cliente"] !== 'string' || !req.body["nome_cliente"] instanceof String)
             throw new Error("O nome precisa ser especificado.");
 
+        if (typeof req.body["data_venda"] !== 'string' || !req.body["data_venda"] instanceof String)
+            throw new Error("Uma data precisa ser especificada.");
+
         if (isNaN(req.body["valor"]))
             throw new Error("O valor da venda precisa ser especificado.");
 
@@ -53,6 +57,7 @@ router.post('/vendas', async (req, res) => {
             ${req.body["id_funcionario"]}, 
             "${req.body["nome_cliente"]}", 
             "${req.body["cpf_cliente"]}", 
+            "${req.body["data_venda"]}", 
             ${req.body["valor"]})`);
 
         console.log(rows);
@@ -69,6 +74,7 @@ router.post('/vendas', async (req, res) => {
 
         console.log(produtosRows);
 
+        conn.end();
         res.writeHead(200, { 'Content-Type': 'text/plain' })
         res.end(String(rows["insertId"]).replace('n', ''));
     }
@@ -112,6 +118,7 @@ router.put('/vendas/*', async (req, res) => {
         }
 
         console.log(rows);
+        conn.end();
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }
@@ -141,6 +148,7 @@ router.delete('/vendas/*', async (req, res) => {
         }
 
         console.log(rows);
+        conn.end();
         res.writeHead(204, { 'Content-Type': 'text/plain' })
         res.end();
     }
